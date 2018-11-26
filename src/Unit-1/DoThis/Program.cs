@@ -13,13 +13,21 @@ namespace WinTail
             // initialize MyActorSystem
             MyActorSystem = ActorSystem.Create("MyActorSystem");
 
+            
+
             Props consoleWriterProps = Props.Create<ConsoleWriterActor>();
             IActorRef consoleWriterActor = MyActorSystem.ActorOf(consoleWriterProps, "consoleWriterActor");
 
+            Props tailCoordinatorProps = Props.Create(() => new TailCoordinatorActor());
+            IActorRef tailCoordinatorActor = MyActorSystem.ActorOf(tailCoordinatorProps, "tailCoordinatorActor");
 
-            
-            Props validationActorProps = Props.Create(() => new ValidationActor(consoleWriterActor));
-            IActorRef validationActor = MyActorSystem.ActorOf(validationActorProps, "validationActor");
+            // pass tailCoordinatorActor to fileValidatorActorProps (just adding one extra arg)
+            Props fileValidatorActorProps = Props.Create(() => new FileValidatorActor(consoleWriterActor, tailCoordinatorActor));
+            IActorRef validationActor = MyActorSystem.ActorOf(fileValidatorActorProps, "validationActor");
+
+
+            //Props validationActorProps = Props.Create(() => new ValidationActor(consoleWriterActor));
+            //IActorRef validationActor = MyActorSystem.ActorOf(validationActorProps, "validationActor");
 
             Props consoleReaderProps = Props.Create<ConsoleReaderActor>(validationActor);
             IActorRef consoleReaderActor = MyActorSystem.ActorOf(consoleReaderProps, "consoleReaderActor");
@@ -34,18 +42,7 @@ namespace WinTail
 
         private static void PrintInstructions()
         {
-            Console.WriteLine("Write whatever you want into the console!");
-            Console.Write("Some lines will appear as");
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.Write(" red ");
-            Console.ResetColor();
-            Console.Write(" and others will appear as");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write(" green! ");
-            Console.ResetColor();
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine("Type 'exit' to quit this application at any time.\n");
+            Console.WriteLine("Please provide the URI of a log file on disk.\n");
         }
     }
     #endregion
